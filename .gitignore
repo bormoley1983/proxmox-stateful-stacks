@@ -1,0 +1,13 @@
+# local inventory with real IPs/passwords
+inventory/*.env
+!inventory/homelab.example.env
+
+# editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.tmp
+
+# logs
+*.log
