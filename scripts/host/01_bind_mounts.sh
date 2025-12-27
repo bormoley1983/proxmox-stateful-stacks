@@ -34,4 +34,9 @@ bind "${RABBIT_CTID:-}"   "${DB_ROOT}/rabbitmq"   "/var/lib/rabbitmq"
 bind "${QDRANT_CTID:-}"   "${DB_ROOT}/qdrant"     "/var/lib/qdrant"
 bind "${KAFKA_CTID:-}"    "${DB_ROOT}/kafka"      "/var/lib/kafka"
 
+# Optional: n8n
+if [[ -n "${N8N_CTID:-}" ]]; then
+  bind "${N8N_CTID}" "${STORAGE_ROOT}/services/n8n" "/var/lib/n8n"
+fi
+
 echo "[✓] Done."

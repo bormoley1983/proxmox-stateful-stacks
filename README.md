@@ -30,6 +30,7 @@ A shareable template for running common **stateful** services in **Proxmox LXC**
 | Qdrant | 2 | 4 GB | 512 MB | 6–8 GB |
 | MongoDB | 2 | 4 GB | 512 MB | 8–12 GB |
 | Elasticsearch (optional) | 2–4 | 8–16 GB | 1–2 GB | 12–20 GB |
+| n8n (optional) | 2 | 2 GB | 512 MB | 8 GB |
 
 ## Quick start
 
@@ -43,7 +44,11 @@ nano inventory/homelab.env
 ### 1) Prepare host storage (Proxmox host)
 
 ```bash
+# Basic setup (without optional services like n8n)
 sudo bash scripts/host/00_prepare_storage.sh
+
+# With inventory file (enables optional services like n8n)
+sudo bash scripts/host/00_prepare_storage.sh inventory/homelab.env
 ```
 
 ### 2) Create LXCs (your preferred method)
@@ -66,6 +71,7 @@ sudo bash scripts/host/02_fix_owner.sh inventory/homelab.env rabbitmq
 sudo bash scripts/host/02_fix_owner.sh inventory/homelab.env kafka
 sudo bash scripts/host/02_fix_owner.sh inventory/homelab.env qdrant
 sudo bash scripts/host/02_fix_owner.sh inventory/homelab.env mongodb
+sudo bash scripts/host/02_fix_owner.sh inventory/homelab.env n8n  # optional
 ```
 
 ### 5) Bootstrap a sudo+ssh user (inside each CT)
@@ -84,5 +90,16 @@ sudo bash services/kafka/setup.sh
 sudo bash services/qdrant/setup.sh
 sudo bash services/mongodb/setup.sh
 sudo bash services/elasticsearch/setup.sh
+sudo bash services/n8n/setup.sh  # optional: requires PostgreSQL and Redis
 ```
+
+### Optional: n8n Setup
+
+n8n is a workflow automation tool that requires PostgreSQL and Redis. Before installing n8n:
+
+1. Ensure PostgreSQL and Redis are set up and running
+2. Create the n8n database and user in PostgreSQL (see `services/n8n/README.md`)
+3. Create the n8n Redis ACL user (see `services/n8n/README.md`)
+4. Configure LXC with nesting enabled: `features: nesting=1,keyctl=1` in `/etc/pve/lxc/<CTID>.conf`
+5. Run the n8n setup script and follow the post-installation steps
 

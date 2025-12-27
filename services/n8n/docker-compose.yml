@@ -1,0 +1,39 @@
+services:
+  caddy:
+    image: caddy:latest
+    container_name: n8n-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/lib/n8n/caddy_config/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /var/lib/n8n/caddy:/data
+    depends_on:
+      - n8n-main
+
+  n8n-main:
+    image: n8nio/n8n:stable
+    container_name: n8n-main
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - N8N_DISABLE_PRODUCTION_MAIN_PROCESS=true
+    expose:
+      - "5678"
+    volumes:
+      - /var/lib/n8n/n8n_data:/home/node/.n8n
+      - /var/lib/n8n/files:/files
+
+  n8n-worker:
+    image: n8nio/n8n:stable
+    container_name: n8n-worker
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - n8n-main
+    command: worker
+    volumes:
+      - /var/lib/n8n/n8n_data:/home/node/.n8n
+      - /var/lib/n8n/files:/files
+

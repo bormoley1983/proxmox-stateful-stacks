@@ -6,7 +6,7 @@ SERVICE="${2:-}"
 
 if [[ -z "${ENV_FILE}" || ! -f "${ENV_FILE}" || -z "${SERVICE}" ]]; then
   echo "Usage: $0 inventory/homelab.env <service>"
-  echo "Services: postgresql|redis|mongodb|rabbitmq|qdrant|kafka"
+  echo "Services: postgresql|redis|mongodb|rabbitmq|qdrant|kafka|n8n"
   exit 1
 fi
 
@@ -23,6 +23,7 @@ case "${SERVICE}" in
   rabbitmq)   CTID="${RABBIT_CTID:-}";   USER="rabbitmq";HOST_PATH="${DB_ROOT}/rabbitmq"   ;;
   qdrant)     CTID="${QDRANT_CTID:-}";   USER="qdrant";  HOST_PATH="${DB_ROOT}/qdrant"     ;;
   kafka)      CTID="${KAFKA_CTID:-}";    USER="kafka";   HOST_PATH="${DB_ROOT}/kafka"      ;;
+  n8n)        CTID="${N8N_CTID:-}";      USER="docker";  HOST_PATH="${STORAGE_ROOT}/services/n8n" ;;
   *) echo "Unknown service: ${SERVICE}"; exit 1 ;;
 esac
 
