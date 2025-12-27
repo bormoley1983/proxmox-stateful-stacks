@@ -1,0 +1,101 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      # Bind mount to models folder for persistence
+      - /models/ollama:/root/.ollama
+    environment:
+      # Explicit model path
+      - OLLAMA_MODELS=/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - llmnet
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  vllm:
+    image: vllm/vllm-openai:latest
+    container_name: vllm
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    shm_size: 4g
+    environment:
+      # GPU memory utilization (0.7-0.95, adjust based on your needs)
+      - VLLM_WORKER_GPU_MEMORY_UTILIZATION=0.9
+      # Optional: set CUDA visible devices if needed
+      # - CUDA_VISIBLE_DEVICES=0
+    command:
+      - --model
+      - microsoft/Phi-3-mini-4k-instruct
+      - --max-model-len
+      - "4096"
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - llmnet
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: openwebui
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    environment:
+      # Allow LAN access
+      - WEBUI_HOST=0.0.0.0
+      # vLLM as OpenAI-compatible backend
+      - OPENAI_API_BASE=http://vllm:8000/v1
+      - OPENAI_API_KEY=sk-12345
+      # Ollama backend
+      - OLLAMA_API_BASE=http://ollama:11434
+      # Optional: Additional settings
+      # - ENABLE_SIGNUP=false
+      # - DEFAULT_USER_ROLE=admin
+    volumes:
+      - ./data:/app/backend/data
+    networks:
+      - llmnet
+    depends_on:
+      - ollama
+      - vllm
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  llmnet:
+    driver: bridge
+

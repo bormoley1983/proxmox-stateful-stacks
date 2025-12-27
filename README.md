@@ -31,6 +31,7 @@ A shareable template for running common **stateful** services in **Proxmox LXC**
 | MongoDB | 2 | 4 GB | 512 MB | 8–12 GB |
 | Elasticsearch (optional) | 2–4 | 8–16 GB | 1–2 GB | 12–20 GB |
 | n8n (optional) | 2 | 2 GB | 512 MB | 8 GB |
+| AI GPU VM (optional) | 16 | 40 GB | N/A | 500 GB + 400 GB | GPU passthrough
 
 ## Quick start
 
@@ -102,4 +103,38 @@ n8n is a workflow automation tool that requires PostgreSQL and Redis. Before ins
 3. Create the n8n Redis ACL user (see `services/n8n/README.md`)
 4. Configure LXC with nesting enabled: `features: nesting=1,keyctl=1` in `/etc/pve/lxc/<CTID>.conf`
 5. Run the n8n setup script and follow the post-installation steps
+
+### Optional: AI GPU VM Setup
+
+The AI GPU VM is a dedicated VM with GPU passthrough for running LLM inference, OpenAI-compatible APIs, and unified web UI.
+
+**Prerequisites**:
+1. GPU passthrough configured on Proxmox host (see `scripts/host/03_prepare_gpu_passthrough.sh`)
+2. VM created with GPU passthrough (see `services/ai-gpu/README.md` for VM configuration)
+
+**Setup**:
+
+1. **Prepare GPU passthrough on Proxmox host**:
+   ```bash
+   sudo bash scripts/host/03_prepare_gpu_passthrough.sh
+   ```
+
+2. **Create VM** with GPU passthrough (follow VM configuration in `services/ai-gpu/README.md`)
+
+3. **Install OS** in the VM (Debian/Ubuntu recommended)
+
+4. **Run setup script inside the VM**:
+   ```bash
+   sudo bash services/ai-gpu/setup.sh
+   ```
+
+5. **After reboot** (if NVIDIA drivers were installed), start services:
+   ```bash
+   cd /opt/ai-gpu
+   docker compose up -d
+   ```
+
+6. **Access OpenWebUI**: `http://VM_IP:3000`
+
+For detailed documentation, see `services/ai-gpu/README.md`.
 
